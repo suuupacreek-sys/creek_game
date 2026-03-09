@@ -415,15 +415,26 @@ function drawChar(c, idx, cx, cy, r, alpha = 1) {
 }
 
 function drawNextFruit() {
-  const ncw = nextCanvas.width, nch = nextCanvas.height;
-  nextCtx.clearRect(0, 0, ncw, nch);
+  const dpr = window.devicePixelRatio || 1;
+  const CSS_W = 90, CSS_H = 90; // CSS 크기 고정
+  nextCanvas.width = Math.round(CSS_W * dpr);
+  nextCanvas.height = Math.round(CSS_H * dpr);
+  nextCanvas.style.width = CSS_W + 'px';
+  nextCanvas.style.height = CSS_H + 'px';
+  nextCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+  nextCtx.clearRect(0, 0, CSS_W, CSS_H);
   const f = FRUITS[nextFruitIdx];
-  const r = Math.min(ncw * 0.33, f.radius * SCALE * 0.9);
-  drawChar(nextCtx, nextFruitIdx, ncw/2, nch * 0.46, r);
-  nextCtx.font = `bold 8px 'Noto Sans KR', sans-serif`;
-  nextCtx.textAlign = 'center'; nextCtx.fillStyle = 'rgba(255,255,255,0.7)';
+  const r = Math.min(CSS_W * 0.33, f.radius * SCALE * 0.9);
+  drawChar(nextCtx, nextFruitIdx, CSS_W/2, CSS_H * 0.44, r);
+  nextCtx.font = `bold 10px 'Noto Sans KR', sans-serif`;
+  nextCtx.textAlign = 'center';
+  nextCtx.fillStyle = 'rgba(255,255,255,0.85)';
+  nextCtx.shadowColor = 'rgba(0,0,0,0.8)';
+  nextCtx.shadowBlur = 3;
   const sn = f.name.length > 7 ? f.name.slice(0,6)+'…' : f.name;
-  nextCtx.fillText(sn, ncw/2, nch * 0.88);
+  nextCtx.fillText(sn, CSS_W/2, CSS_H * 0.88);
+  nextCtx.shadowBlur = 0;
 }
 
 // ── 게임 루프 ─────────────────────────────────────────────────
