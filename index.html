@@ -226,7 +226,7 @@ const FRUITS = [
   { name: '그래스 원더',   radius: 34, color: '#f77f00', score: 10,  emoji: '🍊', img: 'https://i.imgur.com/84XTc4N.png' },
   { name: '비블로스',      radius: 40, color: '#c8a800', score: 15,  emoji: '🍋', img: 'https://i.imgur.com/Vbpr8gf.png' },
   { name: '젠틸돈나',      radius: 48, color: '#e74c3c', score: 21,  emoji: '🍎', img: 'https://i.imgur.com/VNMhcK7.png' },
-  { name: '미호노 부르봉', radius: 55, color: '#52b4e8', score: 28,  emoji: '🍐', img: 'https://i.imgur.com/MXEakAS.png' },
+  { name: '봉ㅋㅋ', radius: 55, color: '#52b4e8', score: 28,  emoji: '🍐', img: 'https://i.imgur.com/MXEakAS.png' },
   { name: '골드쉽',        radius: 62, color: '#d48fb0', score: 36,  emoji: '🍑', img: 'https://i.imgur.com/40zKla7.png' },
   { name: '메이쇼 도토',   radius: 70, color: '#d4a800', score: 45,  emoji: '🍍', img: 'https://i.imgur.com/9VRY1cI.png' },
   { name: '타이키 셔틀',   radius: 78, color: '#52c41a', score: 55,  emoji: '🍈', img: 'https://i.imgur.com/NClxtj1.png' },
@@ -241,19 +241,22 @@ let DROP_Y = 40, DANGER_Y = 80;
 
 function calcScale() {
   const isMobile = window.innerWidth <= 600;
+  const BOTTOM_PAD = isMobile ? 28 : 16;
   const maxW = isMobile ? window.innerWidth - 16 : Math.min(window.innerWidth - 200, 420);
-  const maxH = isMobile ? window.innerHeight - 130 : window.innerHeight - 40;
+  const maxH = isMobile ? window.innerHeight - 130 - BOTTOM_PAD : window.innerHeight - 40 - BOTTOM_PAD;
   SCALE = Math.min(maxW / BASE_W, maxH / BASE_H, 1);
   CANVAS_W = Math.round(BASE_W * SCALE);
   CANVAS_H = Math.round(BASE_H * SCALE);
   DROP_Y = Math.round(40 * SCALE);
   DANGER_Y = Math.round(80 * SCALE);
 
+  const dpr = window.devicePixelRatio || 1;
   const canvas = document.getElementById('game-canvas');
-  canvas.width = CANVAS_W;
-  canvas.height = CANVAS_H;
+  canvas.width = Math.round(CANVAS_W * dpr);
+  canvas.height = Math.round(CANVAS_H * dpr);
   canvas.style.width = CANVAS_W + 'px';
   canvas.style.height = CANVAS_H + 'px';
+  canvas.getContext('2d').setTransform(dpr, 0, 0, dpr, 0, 0);
 
   // danger line 위치
   document.getElementById('danger-line').style.top = DANGER_Y + 'px';
@@ -263,7 +266,6 @@ function calcScale() {
 const imgCache = new Map();
 FRUITS.forEach((f, i) => {
   const img = new Image();
-  img.crossOrigin = 'anonymous';
   img.src = f.img;
   imgCache.set(i, img);
 });
@@ -295,7 +297,7 @@ bestDisplay.textContent = bestScore;
     row.className = 'fruit-row';
     row.innerHTML = `
       <div class="fruit-dot" style="width:${size}px;height:${size}px;background:${f.color};border:1.5px solid rgba(255,255,255,0.2)">
-        <img src="${f.img}" crossorigin="anonymous" onerror="this.style.display='none'">
+        <img src="${f.img}" onerror="this.style.display='none'">
       </div>
       <span class="fruit-name">${f.name}</span>`;
     guide.appendChild(row);
@@ -430,6 +432,8 @@ function gameLoop() {
   processMergeQueue();
   checkGameOver();
 
+  const dpr = window.devicePixelRatio || 1;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   ctx.clearRect(0, 0, CANVAS_W, CANVAS_H);
   ctx.fillStyle = '#0d0720'; ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
 
