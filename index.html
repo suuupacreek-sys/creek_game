@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>크릭 게임 🏇</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;900&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --pink: #ff6eb4;
+    --yellow: #ffe066;
+    --purple: #b77fff;
+    --dark: #0e0720;
+    --card: rgba(255,255,255,0.07);
+    --border: rgba(255,255,255,0.12);
+  }
+
+  body {
+    background: var(--dark);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    font-family: 'Noto Sans KR', sans-serif;
+    overflow: hidden;
+    background-image:
+      radial-gradient(ellipse at 15% 15%, rgba(183,127,255,0.15) 0%, transparent 50%),
+      radial-gradient(ellipse at 85% 85%, rgba(255,110,180,0.12) 0%, transparent 50%);
+  }
+
+  #game-wrapper { display: flex; gap: 18px; align-items: flex-start; }
+  #side-panel { display: flex; flex-direction: column; gap: 12px; width: 155px; }
+
+  .panel-box {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 14px;
+    text-align: center;
+    backdrop-filter: blur(10px);
+  }
+
+  .panel-label { color: rgba(255,255,255,0.45); font-size: 10px; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 6px; }
+  .panel-value { color: #fff; font-size: 30px; font-weight: 900; line-height: 1; }
+
+  #next-fruit-canvas { width: 100px; height: 100px; margin: 0 auto; display: block; }
+
+  .fruit-guide { display: flex; flex-direction: column; gap: 5px; }
+  .fruit-row { display: flex; align-items: center; gap: 7px; }
+  .fruit-dot {
+    border-radius: 50%; flex-shrink: 0; overflow: hidden;
+    display: flex; align-items: center; justify-content: center; font-size: 10px;
+  }
+  .fruit-dot img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+  .fruit-name { color: rgba(255,255,255,0.65); font-size: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100px; }
+
+  #game-container { position: relative; }
+  #game-canvas { border-radius: 12px; display: block; cursor: crosshair; border: 1px solid var(--border); }
+
+  #danger-line { position: absolute; top: 80px; left: 0; right: 0; height: 2px; background: rgba(255,80,80,0.35); pointer-events: none; }
+  #danger-line::after { content: 'DANGER'; position: absolute; right: 8px; top: -10px; color: rgba(255,80,80,0.5); font-size: 9px; letter-spacing: 1px; }
+
+  #drop-indicator { position: absolute; top: 0; width: 1px; background: rgba(255,255,255,0.2); pointer-events: none; transition: left 0.04s; }
+
+  .overlay {
+    position: absolute; inset: 0;
+    background: rgba(10,5,25,0.93);
+    border-radius: 12px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px;
+    backdrop-filter: blur(10px); padding: 20px;
+  }
+  .hidden { display: none !important; }
+
+  .overlay h1 { color: #fff; font-size: 34px; font-weight: 900; text-shadow: 0 0 30px var(--pink); text-align: center; }
+
+  .btn {
+    background: linear-gradient(135deg, var(--pink), var(--purple));
+    color: white; border: none; padding: 12px 32px; border-radius: 50px;
+    font-size: 17px; font-family: 'Noto Sans KR', sans-serif; font-weight: 700;
+    cursor: pointer; transition: transform 0.1s, box-shadow 0.1s;
+    box-shadow: 0 4px 20px rgba(255,110,180,0.35);
+  }
+  .btn:hover { transform: scale(1.04); box-shadow: 0 6px 28px rgba(255,110,180,0.55); }
+  .btn:active { transform: scale(0.97); }
+
+  #score-popup-container { position: absolute; inset: 0; pointer-events: none; overflow: hidden; border-radius: 12px; }
+  .score-popup {
+    position: absolute; color: #FFD700; font-size: 20px; font-weight: 900;
+    text-shadow: 0 0 10px rgba(255,215,0,0.8); pointer-events: none;
+    animation: floatUp 0.9s ease-out forwards; white-space: nowrap;
+  }
+  @keyframes floatUp {
+    0%   { opacity: 1; transform: translateY(0) scale(1); }
+    50%  { opacity: 1; transform: translateY(-28px) scale(1.15); }
+    100% { opacity: 0; transform: translateY(-65px) scale(0.8); }
+  }
+</style>
+</head>
+<body>
+
+<div id="game-wrapper">
+  <div id="side-panel">
+    <div class="panel-box">
+      <div class="panel-label">Score</div>
+      <div class="panel-value" id="score-display">0</div>
+    </div>
+    <div class="panel-box">
+      <div class="panel-label">Best</div>
+      <div class="panel-value" id="best-display">0</div>
+    </div>
+    <div class="panel-box">
+      <div class="panel-label">Next</div>
+      <canvas id="next-fruit-canvas" width="100" height="100"></canvas>
+    </div>
+    <div class="panel-box" style="padding:12px 8px;">
+      <div class="panel-label" style="margin-bottom:8px;">순서</div>
+      <div class="fruit-guide" id="fruit-guide"></div>
+    </div>
+  </div>
+
+  <div id="game-container">
+    <canvas id="game-canvas" width="400" height="550"></canvas>
+    <div id="danger-line"></div>
+    <div id="drop-indicator"></div>
+    <div id="score-popup-container"></div>
+
+    <div id="title-overlay" class="overlay">
+      <div style="font-size:52px"><img src=https://i.imgur.com/oBI9chn.png width=200 height=200></div>
+      <h1>크릭 게임</h1>
+      <div style="color:rgba(255,255,255,0.5);font-size:12px;text-align:center;line-height:1.9">
+        같은 우마를 합치면 더 강한 우마가!<br>위로 넘치면 게임 오버
+      </div>
+      <button class="btn" onclick="startGame()">▶ 게임 시작</button>
+    </div>
+
+    <div id="gameover-overlay" class="overlay hidden">
+      <div style="font-size:48px"><img src=https://i.imgur.com/oBI9chn.png width=200 height=200></div>
+      <h1>게임 오버!</h1>
+      <div style="color:var(--yellow);font-size:26px;font-weight:900" id="final-score-text"></div>
+      <div id="new-record-text" class="hidden" style="color:var(--pink);font-size:16px;font-weight:700">🏆 최고 기록 갱신!</div>
+      <button class="btn" onclick="startGame()">▶ 다시 시작</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const FRUITS = [
+  { name: '마야노 탑건',    radius: 14, color: '#e05a7a', score: 1,   emoji: '🍒', img: 'https://i.imgur.com/ZZ8zpLV.png' },
+  { name: '카렌짱',        radius: 20, color: '#e94560', score: 3,   emoji: '🍓', img: 'https://i.imgur.com/QjWxWJF.png' },
+  { name: '슈발 그랑',     radius: 27, color: '#9b5de5', score: 6,   emoji: '🍇', img: 'https://i.imgur.com/KqoRzvY.png' },
+  { name: '그래스 원더',   radius: 34, color: '#f77f00', score: 10,  emoji: '🍊', img: 'https://i.imgur.com/84XTc4N.png' },
+  { name: '비블로스',      radius: 40, color: '#c8a800', score: 15,  emoji: '🍋', img: 'https://i.imgur.com/Vbpr8gf.png' },
+  { name: '젠틸돈나',      radius: 48, color: '#e74c3c', score: 21,  emoji: '🍎', img: 'https://i.imgur.com/VNMhcK7.png' },
+  { name: '미호노 부르봉', radius: 55, color: '#52b4e8', score: 28,  emoji: '🍐', img: 'https://i.imgur.com/MXEakAS.png' },
+  { name: '골드쉽',        radius: 62, color: '#d48fb0', score: 36,  emoji: '🍑', img: 'https://i.imgur.com/40zKla7.png' },
+  { name: '메이쇼 도토',   radius: 70, color: '#d4a800', score: 45,  emoji: '🍍', img: 'https://i.imgur.com/9VRY1cI.png' },
+  { name: '타이키 셔틀',   radius: 78, color: '#52c41a', score: 55,  emoji: '🍈', img: 'https://i.imgur.com/NClxtj1.png' },
+  { name: '슈퍼크릭',      radius: 90, color: '#2ecc71', score: 100, emoji: '🍉', img: 'https://i.imgur.com/oBI9chn.png' },
+];
+
+const CANVAS_W = 400, CANVAS_H = 550, WALL_T = 30, DROP_Y = 40, DANGER_Y = 80;
+
+// 이미지 프리로드
+const imgCache = new Map();
+FRUITS.forEach((f, i) => {
+  const img = new Image();
+  img.crossOrigin = 'anonymous';
+  img.src = f.img;
+  imgCache.set(i, img);
+});
+
+const { Engine, Runner, Bodies, Body, World, Events, Composite } = Matter;
+
+let engine, runner, world;
+let score = 0;
+let bestScore = parseInt(localStorage.getItem('cricket_best') || '0');
+let currentFruitIdx = 0, nextFruitIdx = 0;
+let canDrop = true, gameRunning = false;
+let mouseX = CANVAS_W / 2;
+let mergeQueue = [], bodyFruitMap = new Map(), gameOverTimer = null;
+
+const canvas = document.getElementById('game-canvas');
+const ctx = canvas.getContext('2d');
+const nextCanvas = document.getElementById('next-fruit-canvas');
+const nextCtx = nextCanvas.getContext('2d');
+const scoreDisplay = document.getElementById('score-display');
+const bestDisplay = document.getElementById('best-display');
+bestDisplay.textContent = bestScore;
+
+// 가이드 사이드바
+(function buildGuide() {
+  const guide = document.getElementById('fruit-guide');
+  FRUITS.forEach((f, i) => {
+    const size = Math.max(8, Math.min(18, f.radius * 0.32));
+    const row = document.createElement('div');
+    row.className = 'fruit-row';
+    row.innerHTML = `
+      <div class="fruit-dot" style="width:${size}px;height:${size}px;background:${f.color};border:1.5px solid rgba(255,255,255,0.25)">
+        <img src="${f.img}" crossorigin="anonymous" onerror="this.style.display='none'">
+      </div>
+      <span class="fruit-name">${f.name}</span>`;
+    guide.appendChild(row);
+  });
+})();
+
+// 물리 엔진
+function initPhysics() {
+  engine = Engine.create({ gravity: { y: 1.8 } });
+  world = engine.world;
+  World.add(world, [
+    Bodies.rectangle(CANVAS_W/2, CANVAS_H + WALL_T/2, CANVAS_W, WALL_T, { isStatic: true }),
+    Bodies.rectangle(-WALL_T/2, CANVAS_H/2, WALL_T, CANVAS_H*2, { isStatic: true }),
+    Bodies.rectangle(CANVAS_W + WALL_T/2, CANVAS_H/2, WALL_T, CANVAS_H*2, { isStatic: true }),
+  ]);
+  Events.on(engine, 'collisionStart', handleCollision);
+  runner = Runner.create();
+  Runner.run(runner, engine);
+}
+
+function handleCollision(event) {
+  for (const { bodyA, bodyB } of event.pairs) {
+    const idxA = bodyFruitMap.get(bodyA.id);
+    const idxB = bodyFruitMap.get(bodyB.id);
+    if (idxA === undefined || idxB === undefined || idxA !== idxB || idxA >= FRUITS.length - 1) continue;
+    if (bodyA.merged || bodyB.merged) continue;
+    bodyA.merged = true; bodyB.merged = true;
+    mergeQueue.push({ idxA, bodyA, bodyB,
+      mx: (bodyA.position.x + bodyB.position.x) / 2,
+      my: (bodyA.position.y + bodyB.position.y) / 2,
+    });
+  }
+}
+
+function processMergeQueue() {
+  for (const { idxA, bodyA, bodyB, mx, my } of mergeQueue) {
+    World.remove(world, bodyA); World.remove(world, bodyB);
+    bodyFruitMap.delete(bodyA.id); bodyFruitMap.delete(bodyB.id);
+    addFruitBody(idxA + 1, mx, my, true);
+    addScore(FRUITS[idxA + 1].score, mx, my);
+  }
+  mergeQueue = [];
+}
+
+function addFruitBody(idx, x, y, isMerge = false) {
+  const body = Bodies.circle(x, y, FRUITS[idx].radius, { restitution: 0.2, friction: 0.5, density: 0.002 });
+  if (isMerge) Body.setVelocity(body, { x: 0, y: -3 });
+  World.add(world, body);
+  bodyFruitMap.set(body.id, idx);
+}
+
+// 점수
+function addScore(pts, x, y) {
+  score += pts;
+  scoreDisplay.textContent = score;
+  if (score > bestScore) {
+    bestScore = score;
+    bestDisplay.textContent = bestScore;
+    localStorage.setItem('cricket_best', bestScore);
+  }
+  const el = document.createElement('div');
+  el.className = 'score-popup';
+  el.textContent = `+${pts}`;
+  el.style.left = (x - 20) + 'px';
+  el.style.top = (y - 20) + 'px';
+  document.getElementById('score-popup-container').appendChild(el);
+  setTimeout(() => el.remove(), 900);
+}
+
+// 캐릭터 그리기
+function lighten(hex, amt) {
+  const n = parseInt(hex.replace('#',''), 16);
+  return `rgb(${Math.min(255,(n>>16)+amt)},${Math.min(255,((n>>8)&0xff)+amt)},${Math.min(255,(n&0xff)+amt)})`;
+}
+
+function drawChar(c, idx, cx, cy, r, alpha = 1) {
+  const f = FRUITS[idx];
+  const img = imgCache.get(idx);
+  const loaded = img && img.complete && img.naturalWidth > 0;
+
+  c.save();
+  c.globalAlpha = alpha;
+  c.beginPath(); c.arc(cx, cy, r, 0, Math.PI * 2); c.clip();
+
+  if (loaded) {
+    c.fillStyle = f.color + '55'; c.fill();
+    c.drawImage(img, cx - r, cy - r, r * 2, r * 2);
+  } else {
+    const grd = c.createRadialGradient(cx - r*0.3, cy - r*0.3, 0, cx, cy, r);
+    grd.addColorStop(0, lighten(f.color, 50)); grd.addColorStop(1, f.color);
+    c.fillStyle = grd; c.fill();
+    c.font = `${Math.max(10, r)}px serif`;
+    c.textAlign = 'center'; c.textBaseline = 'middle';
+    c.fillText(f.emoji, cx, cy);
+  }
+  c.restore();
+
+  // 테두리
+  c.save(); c.globalAlpha = alpha * 0.28;
+  c.beginPath(); c.arc(cx, cy, r, 0, Math.PI * 2);
+  c.strokeStyle = '#fff'; c.lineWidth = 1.5; c.stroke();
+  c.restore();
+
+  // 이름 (큰 캐릭터만)
+  if (r >= 48) {
+    c.save(); c.globalAlpha = alpha * 0.9;
+    c.font = `bold ${Math.min(11, r * 0.17)}px 'Noto Sans KR', sans-serif`;
+    c.textAlign = 'center'; c.textBaseline = 'middle';
+    c.fillStyle = '#fff'; c.shadowColor = 'rgba(0,0,0,0.9)'; c.shadowBlur = 5;
+    const sn = f.name.length > 6 ? f.name.slice(0, 5) + '…' : f.name;
+    c.fillText(sn, cx, cy + r * 0.62);
+    c.restore();
+  }
+}
+
+function drawNextFruit() {
+  nextCtx.clearRect(0, 0, 100, 100);
+  const f = FRUITS[nextFruitIdx];
+  drawChar(nextCtx, nextFruitIdx, 50, 46, Math.min(30, f.radius * 0.75));
+  nextCtx.font = `bold 9px 'Noto Sans KR', sans-serif`;
+  nextCtx.textAlign = 'center'; nextCtx.fillStyle = 'rgba(255,255,255,0.7)';
+  const sn = f.name.length > 7 ? f.name.slice(0,6)+'…' : f.name;
+  nextCtx.fillText(sn, 50, 88);
+}
+
+// 메인 루프
+function gameLoop() {
+  if (!gameRunning) return;
+  processMergeQueue();
+  checkGameOver();
+
+  ctx.clearRect(0, 0, CANVAS_W, CANVAS_H);
+  ctx.fillStyle = '#0d0720'; ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
+
+  ctx.strokeStyle = 'rgba(255,255,255,0.025)'; ctx.lineWidth = 1;
+  for (let x = 0; x < CANVAS_W; x += 40) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,CANVAS_H); ctx.stroke(); }
+  for (let y = 0; y < CANVAS_H; y += 40) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(CANVAS_W,y); ctx.stroke(); }
+
+  for (const body of Composite.allBodies(world)) {
+    const idx = bodyFruitMap.get(body.id);
+    if (idx === undefined) continue;
+    ctx.save();
+    ctx.translate(body.position.x, body.position.y);
+    ctx.rotate(body.angle);
+    drawChar(ctx, idx, 0, 0, FRUITS[idx].radius);
+    ctx.restore();
+  }
+
+  if (canDrop) {
+    const f = FRUITS[currentFruitIdx];
+    const px = Math.max(f.radius + WALL_T, Math.min(CANVAS_W - f.radius - WALL_T, mouseX));
+    ctx.setLineDash([3,6]); ctx.strokeStyle = 'rgba(255,255,255,0.1)'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(px, DROP_Y + f.radius); ctx.lineTo(px, CANVAS_H); ctx.stroke();
+    ctx.setLineDash([]);
+    drawChar(ctx, currentFruitIdx, px, DROP_Y, f.radius, 0.75);
+  }
+
+  requestAnimationFrame(gameLoop);
+}
+
+// 게임 오버
+function checkGameOver() {
+  for (const body of Composite.allBodies(world)) {
+    const idx = bodyFruitMap.get(body.id);
+    if (idx === undefined) continue;
+    if (body.position.y - FRUITS[idx].radius < DANGER_Y &&
+        Math.abs(body.velocity.y) < 0.5 && Math.abs(body.velocity.x) < 0.5) {
+      if (!gameOverTimer) gameOverTimer = setTimeout(triggerGameOver, 1500);
+      return;
+    }
+  }
+  if (gameOverTimer) { clearTimeout(gameOverTimer); gameOverTimer = null; }
+}
+
+function triggerGameOver() {
+  gameRunning = false; canDrop = false;
+  document.getElementById('final-score-text').textContent = `최종 점수: ${score}`;
+  const nr = document.getElementById('new-record-text');
+  (score >= bestScore && score > 0) ? nr.classList.remove('hidden') : nr.classList.add('hidden');
+  document.getElementById('gameover-overlay').classList.remove('hidden');
+}
+
+function dropFruit(x) {
+  if (!canDrop || !gameRunning) return;
+  canDrop = false;
+  const f = FRUITS[currentFruitIdx];
+  addFruitBody(currentFruitIdx, Math.max(f.radius + WALL_T, Math.min(CANVAS_W - f.radius - WALL_T, x)), DROP_Y);
+  currentFruitIdx = nextFruitIdx;
+  nextFruitIdx = Math.floor(Math.random() * 5);
+  drawNextFruit();
+  setTimeout(() => { canDrop = true; }, 600);
+}
+
+function startGame() {
+  document.getElementById('title-overlay').classList.add('hidden');
+  document.getElementById('gameover-overlay').classList.add('hidden');
+  if (engine) { Runner.stop(runner); World.clear(world); Engine.clear(engine); }
+  bodyFruitMap.clear(); mergeQueue = [];
+  score = 0; scoreDisplay.textContent = 0;
+  canDrop = true; gameRunning = true; gameOverTimer = null; mouseX = CANVAS_W / 2;
+  currentFruitIdx = Math.floor(Math.random() * 5);
+  nextFruitIdx = Math.floor(Math.random() * 5);
+  drawNextFruit();
+  initPhysics();
+  requestAnimationFrame(gameLoop);
+}
+
+// 이벤트
+canvas.addEventListener('mousemove', e => {
+  mouseX = e.clientX - canvas.getBoundingClientRect().left;
+  const f = FRUITS[currentFruitIdx];
+  const px = Math.max(f.radius + WALL_T, Math.min(CANVAS_W - f.radius - WALL_T, mouseX));
+  const di = document.getElementById('drop-indicator');
+  di.style.left = px + 'px'; di.style.height = CANVAS_H + 'px';
+});
+canvas.addEventListener('click', e => dropFruit(e.clientX - canvas.getBoundingClientRect().left));
+canvas.addEventListener('touchmove', e => { e.preventDefault(); mouseX = e.touches[0].clientX - canvas.getBoundingClientRect().left; }, { passive: false });
+canvas.addEventListener('touchend', e => { e.preventDefault(); dropFruit(e.changedTouches[0].clientX - canvas.getBoundingClientRect().left); }, { passive: false });
+</script>
+</body>
+</html>
