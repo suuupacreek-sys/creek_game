@@ -467,15 +467,6 @@ function drawChar(c, idx, cx, cy, r, alpha = 1) {
   c.strokeStyle = '#fff'; c.lineWidth = 1.5; c.stroke();
   c.restore();
 
-  if (r >= 38) {
-    c.save(); c.globalAlpha = alpha * 0.9;
-    c.font = `bold ${Math.min(10, r * 0.17)}px 'Noto Sans KR', sans-serif`;
-    c.textAlign = 'center'; c.textBaseline = 'middle';
-    c.fillStyle = '#fff'; c.shadowColor = 'rgba(0,0,0,0.9)'; c.shadowBlur = 4;
-    const sn = f.name.length > 6 ? f.name.slice(0, 5) + '…' : f.name;
-    c.fillText(sn, cx, cy + r * 0.62);
-    c.restore();
-  }
 }
 
 function drawNextFruit() {
