@@ -114,28 +114,6 @@
 
   #drop-indicator { position: absolute; top: 0; width: 1px; background: rgba(255,255,255,0.18); pointer-events: none; }
 
-  /* ── RESET 버튼 ── */
-  #reset-btn {
-    margin-top: 10px;
-    width: 100%;
-    background: rgba(255,255,255,0.07);
-    border: 1px solid rgba(255,255,255,0.15);
-    color: rgba(255,255,255,0.55);
-    padding: 10px;
-    border-radius: 10px;
-    font-size: 14px;
-    font-family: 'Noto Sans KR', sans-serif;
-    font-weight: 700;
-    cursor: pointer;
-    letter-spacing: 2px;
-    transition: all 0.15s;
-  }
-  #reset-btn:hover { background: rgba(255,80,80,0.2); border-color: rgba(255,80,80,0.4); color: #ff8080; }
-  #reset-btn:active { transform: scale(0.97); }
-
-  @media (max-width: 600px) {
-    #reset-btn { margin-top: 8px; width: calc(100% - 16px); border-radius: 10px; }
-  }
 
   /* ── 오버레이 ── */
   .overlay {
@@ -157,6 +135,27 @@
   }
   .btn:hover { transform: scale(1.04); }
   .btn:active { transform: scale(0.97); }
+
+  /* RESET 버튼 - 캔버스 우측 상단 */
+  #reset-btn {
+    position: absolute;
+    top: 8px; right: 8px;
+    z-index: 10;
+    background: rgba(0,0,0,0.45);
+    border: 1px solid rgba(255,255,255,0.18);
+    color: rgba(255,255,255,0.6);
+    padding: 5px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-family: 'Noto Sans KR', sans-serif;
+    font-weight: 700;
+    cursor: pointer;
+    letter-spacing: 1px;
+    transition: all 0.15s;
+    backdrop-filter: blur(6px);
+  }
+  #reset-btn:hover { background: rgba(255,80,80,0.3); border-color: rgba(255,80,80,0.5); color: #ff9090; }
+  #reset-btn:active { transform: scale(0.94); }
 
   #score-popup-container { position: absolute; inset: 0; pointer-events: none; overflow: hidden; border-radius: 12px; }
   .score-popup {
@@ -193,14 +192,14 @@
     </div>
   </div>
 
-  <div style="display:flex;flex-direction:column;align-items:center;">
-    <div id="game-container">
-      <canvas id="game-canvas"></canvas>
-      <div id="danger-line"></div>
-      <div id="drop-indicator"></div>
-      <div id="score-popup-container"></div>
+  <div id="game-container">
+    <canvas id="game-canvas"></canvas>
+    <div id="danger-line"></div>
+    <div id="drop-indicator"></div>
+    <div id="score-popup-container"></div>
+    <button id="reset-btn" onclick="confirmReset()">🔄 RESET</button>
 
-      <div id="title-overlay" class="overlay">
+    <div id="title-overlay" class="overlay">
         <div style="font-size:48px">🏇</div>
         <h1>크릭 게임</h1>
         <div style="color:rgba(255,255,255,0.5);font-size:12px;text-align:center;line-height:1.9">
@@ -215,10 +214,7 @@
         <div style="color:var(--yellow);font-size:24px;font-weight:900" id="final-score-text"></div>
         <div id="new-record-text" class="hidden" style="color:var(--pink);font-size:15px;font-weight:700">🏆 최고 기록 갱신!</div>
         <button class="btn" onclick="startGame()">▶ 다시 시작</button>
-      </div>
     </div>
-
-    <button id="reset-btn" onclick="confirmReset()">🔄 RESET</button>
   </div>
 </div>
 
