@@ -241,9 +241,9 @@
 const FRUITS = [
   { name: '마야노 탑건',  radius: 14, color: '#e05a7a', score: 1,   emoji: '🍒', img: 'https://i.imgur.com/ZZ8zpLV.png' },
   { name: '카렌짱',      radius: 20, color: '#e94560', score: 3,   emoji: '🍓', img: 'https://i.imgur.com/QjWxWJF.png' },
-  { name: '슈발그랑',   radius: 27, color: '#9b5de5', score: 6,   emoji: '🍇', img: 'https://imgur.com/ydPELKy.png' },
+  { name: '무테키',   radius: 27, color: '#9b5de5', score: 6,   emoji: '🍇', img: 'https://imgur.com/ydPELKy.png' },
   { name: '그래스 원더', radius: 34, color: '#f77f00', score: 10,  emoji: '🍊', img: 'https://i.imgur.com/84XTc4N.png' },
-  { name: '무테키',      radius: 40, color: '#c8a800', score: 15,  emoji: '🍋', img: 'https://i.imgur.com/ydPELKy.png' },
+  { name: '비블로스',      radius: 40, color: '#c8a800', score: 15,  emoji: '🍋', img: 'https://i.imgur.com/ydPELKy.png' },
   { name: '젠틸돈나',    radius: 48, color: '#e74c3c', score: 21,  emoji: '🍎', img: 'https://i.imgur.com/VNMhcK7.png' },
   { name: '봉ㅋㅋ',      radius: 55, color: '#52b4e8', score: 28,  emoji: '🍐', img: 'https://i.imgur.com/MXEakAS.png' },
   { name: '골드쉽',      radius: 62, color: '#d48fb0', score: 36,  emoji: '🍑', img: 'https://i.imgur.com/40zKla7.png' },
@@ -380,7 +380,7 @@ const dropSounds = [
   new Audio('01.mp3'), // 마야노 탑건
   new Audio('02.mp3'), // 카렌짱
   new Audio('03.mp3'), // 무테키
-  new Audio('04.mp3'), // 그래스원더
+  new Audio('04.mp3'), // 그래스 원더
   new Audio('05.mp3'), // 비블로스
   new Audio('06.mp3'), // 젠틸돈나
   null, null, null, null, null
@@ -390,13 +390,13 @@ const dropSounds = [
 const mergeSounds = [
   new Audio('02.mp3'),  // 탑건+탑건 → 카렌짱
   new Audio('03.mp3'),  // 카렌짱+카렌짱 → 무테키
-  new Audio('04.mp3'),  // 무테키+무테키 → 그래스원더
-  new Audio('05.mp3'),  // 그래스원더+그래스원더 → 비블로스
+  new Audio('04.mp3'),  // 무테키+무테키 → 그래스 원더
+  new Audio('05.mp3'),  // 그래스 원더+그래스 원더 → 비블로스
   new Audio('06.mp3'),  // 비블로스+비블로스 → 젠틸돈나
   new Audio('07.mp3'),  // 젠틸돈나+젠틸돈나 → 봉ㅋㅋ
   new Audio('08.mp3'),  // 봉ㅋㅋ+봉ㅋㅋ → 골드쉽
-  new Audio('09.mp3'),  // 골드쉽+골드쉽 → 메이쇼도토
-  new Audio('10.mp3'),  // 메이쇼도토+메이쇼도토 → 라모누
+  new Audio('09.mp3'),  // 골드쉽+골드쉽 → 메이쇼 도토
+  new Audio('10.mp3'),  // 메이쇼 도토+메이쇼 도토 → 라모누
   new Audio('11.mp3'),  // 라모누+라모누 → 슈퍼크릭
 ];
 
