@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>크릭 게임</title>
+<title>크릭 게임 🏇</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;900&display=swap');
@@ -159,7 +159,7 @@
 
   #mute-btn {
     position: absolute;
-    bottom: 8px; right: 8px;
+    top: 40px; right: 8px;
     z-index: 10;
     background: rgba(0,0,0,0.45);
     border: 1px solid rgba(255,255,255,0.18);
@@ -186,6 +186,50 @@
     50%  { opacity: 1; transform: translateY(-25px) scale(1.1); }
     100% { opacity: 0; transform: translateY(-60px) scale(0.8); }
   }
+
+  /* 랭킹 버튼 */
+  #ranking-btn {
+    position: absolute; top: 8px; left: 8px; z-index: 10;
+    background: rgba(0,0,0,0.45); border: 1px solid rgba(255,255,255,0.18);
+    color: rgba(255,255,255,0.7); padding: 5px 10px; border-radius: 20px;
+    font-size: 11px; font-family: 'Noto Sans KR', sans-serif; font-weight: 700;
+    cursor: pointer; letter-spacing: 1px; transition: all 0.15s; backdrop-filter: blur(6px);
+  }
+  #ranking-btn:hover { background: rgba(255,215,0,0.2); border-color: rgba(255,215,0,0.4); color: #FFD700; }
+
+  .btn-sm {
+    background: transparent; border: 1px solid var(--border);
+    color: rgba(255,255,255,0.6); padding: 8px 20px; border-radius: 50px;
+    font-size: 13px; font-family: 'Noto Sans KR', sans-serif; font-weight: 700;
+    cursor: pointer; transition: all 0.15s;
+  }
+  .btn-sm:hover { background: var(--card); color: #fff; }
+
+  .name-input {
+    background: rgba(255,255,255,0.08); border: 1px solid var(--border);
+    border-radius: 10px; color: #fff; font-size: 18px;
+    font-family: 'Noto Sans KR', sans-serif; font-weight: 700;
+    padding: 10px 16px; text-align: center; outline: none; width: 200px; transition: border-color 0.2s;
+  }
+  .name-input:focus { border-color: var(--pink); }
+  .name-input::placeholder { color: rgba(255,255,255,0.25); }
+
+  .ranking-list {
+    width: 100%; display: flex; flex-direction: column; gap: 6px;
+    max-height: 320px; overflow-y: auto;
+  }
+  .ranking-list::-webkit-scrollbar { width: 3px; }
+  .ranking-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+  .rank-row {
+    display: flex; align-items: center; gap: 10px;
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 10px; padding: 8px 12px;
+  }
+  .rank-num { color: rgba(255,255,255,0.4); font-size: 12px; font-weight: 900; width: 24px; text-align: center; flex-shrink: 0; }
+  .rank-medal { font-size: 18px; width: 24px; text-align: center; flex-shrink: 0; }
+  .rank-name { color: #fff; font-size: 13px; font-weight: 700; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .rank-score { color: var(--yellow); font-size: 14px; font-weight: 900; flex-shrink: 0; }
+  .rank-loading { color: rgba(255,255,255,0.4); font-size: 13px; text-align: center; padding: 20px; }
 </style>
 </head>
 <body>
@@ -217,35 +261,85 @@
     <div id="score-popup-container"></div>
     <button id="reset-btn" onclick="confirmReset()">🔄 RESET</button>
     <button id="mute-btn" onclick="toggleMute()">🔊</button>
+    <button id="ranking-btn" onclick="showRanking()">🏆 RANK</button>
 
     <div id="title-overlay" class="overlay">
-        <div style="font-size:48px"><img src=https://i.imgur.com/oBI9chn.png width=200 height=200></div>
+        <div style="font-size:48px">🏇</div>
         <h1>크릭 게임</h1>
         <div style="color:rgba(255,255,255,0.5);font-size:12px;text-align:center;line-height:1.9">
           같은 우마를 합치면 더 강한 우마가!<br>위로 넘치면 게임 오버
         </div>
         <button class="btn" onclick="startGame()">▶ 게임 시작</button>
+        <button class="btn-sm" onclick="showRanking()">🏆 랭킹 보기</button>
       </div>
 
       <div id="gameover-overlay" class="overlay hidden">
-        <div style="font-size:44px"><img src=https://i.imgur.com/oBI9chn.png width=200 height=200></div>
+        <div style="font-size:44px">🏇</div>
         <h1>게임 오버!</h1>
         <div style="color:var(--yellow);font-size:24px;font-weight:900" id="final-score-text"></div>
         <div id="new-record-text" class="hidden" style="color:var(--pink);font-size:15px;font-weight:700">🏆 최고 기록 갱신!</div>
-        <button class="btn" onclick="startGame()">▶ 다시 시작</button>
+        <div id="name-input-area" style="display:flex;flex-direction:column;align-items:center;gap:8px">
+          <div style="color:rgba(255,255,255,0.5);font-size:11px;">랭킹에 등록할 닉네임</div>
+          <input id="player-name" class="name-input" type="text" maxlength="10" placeholder="닉네임 입력">
+          <button class="btn" onclick="submitScore()" style="padding:10px 28px;font-size:15px;">📝 등록</button>
+        </div>
+        <div id="submit-done" class="hidden" style="color:rgba(255,255,255,0.5);font-size:13px;">✅ 등록 완료!</div>
+        <div style="display:flex;gap:10px;">
+          <button class="btn" onclick="startGame()">▶ 다시 시작</button>
+          <button class="btn-sm" onclick="showRanking()">🏆 랭킹</button>
+        </div>
+    </div>
+  </div>
+
+    <!-- 랭킹 오버레이 -->
+    <div id="ranking-overlay" class="overlay hidden">
+      <h1 style="font-size:24px;">🏆 랭킹</h1>
+      <div class="ranking-list" id="ranking-list">
+        <div class="rank-loading">불러오는 중...</div>
+      </div>
+      <button class="btn" onclick="hideRanking()">← 돌아가기</button>
     </div>
   </div>
 </div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
+import { getFirestore, collection, addDoc, getDocs, query, orderBy, limit, serverTimestamp }
+  from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
+import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-analytics.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCNESIKAyI7QlNFRLuuuPaMjFSWdk22GgQ",
+  authDomain: "creekgame.firebaseapp.com",
+  projectId: "creekgame",
+  storageBucket: "creekgame.firebasestorage.app",
+  messagingSenderId: "457181267190",
+  appId: "1:457181267190:web:eacf385adbf6796335d8d7",
+  measurementId: "G-5NG7BH0J2S"
+};
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+getAnalytics(app);
+
+window._db = db;
+window._collection = collection;
+window._addDoc = addDoc;
+window._getDocs = getDocs;
+window._query = query;
+window._orderBy = orderBy;
+window._limit = limit;
+window._serverTimestamp = serverTimestamp;
+</script>
 
 <script>
 const FRUITS = [
   { name: '마야노 탑건',  radius: 14, color: '#e05a7a', score: 1,   emoji: '🍒', img: 'https://i.imgur.com/ZZ8zpLV.png' },
   { name: '카렌짱',      radius: 20, color: '#e94560', score: 3,   emoji: '🍓', img: 'https://i.imgur.com/QjWxWJF.png' },
-  { name: '무테키',   radius: 27, color: '#9b5de5', score: 6,   emoji: '🍇', img: 'https://i.imgur.com/ydPELKy.png' },
+  { name: '슈발 그랑',   radius: 27, color: '#9b5de5', score: 6,   emoji: '🍇', img: 'https://i.imgur.com/KqoRzvY.png' },
   { name: '그래스 원더', radius: 34, color: '#f77f00', score: 10,  emoji: '🍊', img: 'https://i.imgur.com/84XTc4N.png' },
-  { name: '비블로스',      radius: 40, color: '#c8a800', score: 15,  emoji: '🍋', img: 'https://i.imgur.com/Vbpr8gf.png' },
+  { name: '무테키',      radius: 40, color: '#c8a800', score: 15,  emoji: '🍋', img: 'https://i.imgur.com/ydPELKy.png' },
   { name: '젠틸돈나',    radius: 48, color: '#e74c3c', score: 21,  emoji: '🍎', img: 'https://i.imgur.com/VNMhcK7.png' },
-  { name: '부르봉',      radius: 55, color: '#52b4e8', score: 28,  emoji: '🍐', img: 'https://i.imgur.com/MXEakAS.png' },
+  { name: '봉ㅋㅋ',      radius: 55, color: '#52b4e8', score: 28,  emoji: '🍐', img: 'https://i.imgur.com/MXEakAS.png' },
   { name: '골드쉽',      radius: 62, color: '#d48fb0', score: 36,  emoji: '🍑', img: 'https://i.imgur.com/40zKla7.png' },
   { name: '메이쇼 도토', radius: 70, color: '#d4a800', score: 45,  emoji: '🍍', img: 'https://i.imgur.com/9VRY1cI.png' },
   { name: '라모누',      radius: 78, color: '#52c41a', score: 55,  emoji: '🍈', img: 'https://i.imgur.com/PSFNPxD.png' },
@@ -378,25 +472,20 @@ const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 // 드롭 효과음 (캐릭터별, 없으면 null)
 const dropSounds = [
   new Audio('01.mp3'), // 마야노 탑건
-  new Audio('02.mp3'), // 카렌짱
-  new Audio('03.mp3'), // 무테키
-  new Audio('04.mp3'), // 그래스 원더
-  new Audio('05.mp3'), // 비블로스
-  new Audio('06.mp3'), // 젠틸돈나
-  null, null, null, null, null
+  null, null, null, null, null, null, null, null, null, null
 ];
 
 // 결합 효과음 (02~11.mp3)
 const mergeSounds = [
   new Audio('02.mp3'),  // 탑건+탑건 → 카렌짱
-  new Audio('03.mp3'),  // 카렌짱+카렌짱 → 무테키
-  new Audio('04.mp3'),  // 무테키+무테키 → 그래스 원더
-  new Audio('05.mp3'),  // 그래스 원더+그래스 원더 → 비블로스
-  new Audio('06.mp3'),  // 비블로스+비블로스 → 젠틸돈나
-  new Audio('07.mp3'),  // 젠틸돈나+젠틸돈나 → 부르봉
-  new Audio('08.mp3'),  // 부르봉+부르봉 → 골드쉽
-  new Audio('09.mp3'),  // 골드쉽+골드쉽 → 메이쇼 도토
-  new Audio('10.mp3'),  // 메이쇼 도토+메이쇼 도토 → 라모누
+  new Audio('03.mp3'),  // 카렌짱+카렌짱 → 슈발그랑
+  new Audio('04.mp3'),  // 슈발그랑+슈발그랑 → 그래스원더
+  new Audio('05.mp3'),  // 그래스원더+그래스원더 → 무테키
+  new Audio('06.mp3'),  // 무테키+무테키 → 젠틸돈나
+  new Audio('07.mp3'),  // 젠틸돈나+젠틸돈나 → 봉ㅋㅋ
+  new Audio('08.mp3'),  // 봉ㅋㅋ+봉ㅋㅋ → 골드쉽
+  new Audio('09.mp3'),  // 골드쉽+골드쉽 → 메이쇼도토
+  new Audio('10.mp3'),  // 메이쇼도토+메이쇼도토 → 라모누
   new Audio('11.mp3'),  // 라모누+라모누 → 슈퍼크릭
 ];
 
@@ -467,6 +556,15 @@ function drawChar(c, idx, cx, cy, r, alpha = 1) {
   c.strokeStyle = '#fff'; c.lineWidth = 1.5; c.stroke();
   c.restore();
 
+  if (r >= 38) {
+    c.save(); c.globalAlpha = alpha * 0.9;
+    c.font = `bold ${Math.min(10, r * 0.17)}px 'Noto Sans KR', sans-serif`;
+    c.textAlign = 'center'; c.textBaseline = 'middle';
+    c.fillStyle = '#fff'; c.shadowColor = 'rgba(0,0,0,0.9)'; c.shadowBlur = 4;
+    const sn = f.name.length > 6 ? f.name.slice(0, 5) + '…' : f.name;
+    c.fillText(sn, cx, cy + r * 0.62);
+    c.restore();
+  }
 }
 
 function drawNextFruit() {
@@ -550,7 +648,62 @@ function triggerGameOver() {
   document.getElementById('final-score-text').textContent = `최종 점수: ${score}`;
   const nr = document.getElementById('new-record-text');
   (score >= bestScore && score > 0) ? nr.classList.remove('hidden') : nr.classList.add('hidden');
+  document.getElementById('name-input-area').classList.remove('hidden');
+  document.getElementById('submit-done').classList.add('hidden');
+  document.getElementById('player-name').value = '';
   document.getElementById('gameover-overlay').classList.remove('hidden');
+}
+
+async function submitScore() {
+  const name = document.getElementById('player-name').value.trim();
+  if (!name) { alert('닉네임을 입력해주세요!'); return; }
+  try {
+    await window._addDoc(window._collection(window._db, 'rankings'), {
+      name,
+      score,
+      createdAt: window._serverTimestamp()
+    });
+    document.getElementById('name-input-area').classList.add('hidden');
+    document.getElementById('submit-done').classList.remove('hidden');
+  } catch(e) {
+    alert('등록 실패 😢 다시 시도해주세요');
+  }
+}
+
+async function showRanking() {
+  document.getElementById('title-overlay').classList.add('hidden');
+  document.getElementById('gameover-overlay').classList.add('hidden');
+  document.getElementById('ranking-overlay').classList.remove('hidden');
+
+  const list = document.getElementById('ranking-list');
+  list.innerHTML = '<div class="rank-loading">불러오는 중...</div>';
+
+  try {
+    const q = window._query(window._collection(window._db, 'rankings'), window._orderBy('score', 'desc'), window._limit(20));
+    const snap = await window._getDocs(q);
+    const medals = ['🥇','🥈','🥉'];
+    if (snap.empty) { list.innerHTML = '<div class="rank-loading">아직 기록이 없어요!</div>'; return; }
+    list.innerHTML = '';
+    let i = 0;
+    snap.forEach(doc => {
+      const d = doc.data();
+      const row = document.createElement('div');
+      row.className = 'rank-row';
+      row.innerHTML = `
+        <span class="${i < 3 ? 'rank-medal' : 'rank-num'}">${i < 3 ? medals[i] : (i+1)}</span>
+        <span class="rank-name">${d.name}</span>
+        <span class="rank-score">${d.score.toLocaleString()}</span>`;
+      list.appendChild(row);
+      i++;
+    });
+  } catch(e) {
+    list.innerHTML = '<div class="rank-loading">불러오기 실패 😢</div>';
+  }
+}
+
+function hideRanking() {
+  document.getElementById('ranking-overlay').classList.add('hidden');
+  if (!gameRunning) document.getElementById('title-overlay').classList.remove('hidden');
 }
 
 // ── 드롭 ──────────────────────────────────────────────────────
@@ -586,6 +739,7 @@ function confirmReset() {
 function startGame() {
   document.getElementById('title-overlay').classList.add('hidden');
   document.getElementById('gameover-overlay').classList.add('hidden');
+  document.getElementById('ranking-overlay').classList.add('hidden');
   if (engine) { Runner.stop(runner); World.clear(world); Engine.clear(engine); }
   bodyFruitMap.clear(); mergeQueue = [];
   score = 0; scoreDisplay.textContent = 0;
