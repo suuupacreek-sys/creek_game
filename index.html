@@ -269,7 +269,15 @@
         <div style="color:rgba(255,255,255,0.5);font-size:12px;text-align:center;line-height:1.9">
           같은 우마를 합치면 더 강한 우마가!<br>위로 넘치면 게임 오버
         </div>
-        <button class="btn" onclick="startGame()">▶ 게임 시작</button>
+        <div style="color:rgba(255,255,255,0.45);font-size:11px;letter-spacing:1px;">모드 선택</div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;">
+          <button class="btn" onclick="startGame('bangdi')" style="padding:12px 24px;font-size:15px;">
+            🍑 빵디 모드
+          </button>
+          <button class="btn" onclick="startGame('uyutong')" style="padding:12px 24px;font-size:15px;background:linear-gradient(135deg,#3498db,#9b59b6);">
+            🥛 우유통 모드
+          </button>
+        </div>
         <button class="btn-sm" onclick="showRanking()">🏆 랭킹 보기</button>
       </div>
 
@@ -285,7 +293,7 @@
         </div>
         <div id="submit-done" class="hidden" style="color:rgba(255,255,255,0.5);font-size:13px;">✅ 등록 완료!</div>
         <div style="display:flex;gap:10px;">
-          <button class="btn" onclick="startGame()">▶ 다시 시작</button>
+          <button class="btn" onclick="startGame(currentMode)">▶ 다시 시작</button>
           <button class="btn-sm" onclick="showRanking()">🏆 랭킹</button>
         </div>
     </div>
@@ -363,19 +371,37 @@ window.addEventListener('fetchRanking', async () => {
 </script>
 
 <script>
-const FRUITS = [
+// ── 모드별 캐릭터 데이터 ──────────────────────────────────────
+const FRUITS_BANGDI = [
   { name: '마야노탑건',  radius: 14, color: '#e05a7a', score: 1,   emoji: '🍒', img: 'https://i.imgur.com/ZZ8zpLV.png' },
   { name: '카렌짱',      radius: 20, color: '#e94560', score: 3,   emoji: '🍓', img: 'https://i.imgur.com/QjWxWJF.png' },
-  { name: '무테키',   radius: 27, color: '#9b5de5', score: 6,   emoji: '🍇', img: 'https://i.imgur.com/ydPELKy.png' },
-  { name: '그래스원더', radius: 34, color: '#f77f00', score: 10,  emoji: '🍊', img: 'https://i.imgur.com/84XTc4N.png' },
-  { name: '비블로스',      radius: 40, color: '#c8a800', score: 15,  emoji: '🍋', img: 'https://i.imgur.com/Vbpr8gf.png' },
+  { name: '무테키',      radius: 27, color: '#9b5de5', score: 6,   emoji: '🍇', img: 'https://i.imgur.com/ydPELKy.png' },
+  { name: '그래스원더',  radius: 34, color: '#f77f00', score: 10,  emoji: '🍊', img: 'https://i.imgur.com/84XTc4N.png' },
+  { name: '비블로스',    radius: 40, color: '#c8a800', score: 15,  emoji: '🍋', img: 'https://i.imgur.com/Vbpr8gf.png' },
   { name: '젠틸돈나',    radius: 48, color: '#e74c3c', score: 21,  emoji: '🍎', img: 'https://i.imgur.com/VNMhcK7.png' },
   { name: '부르봉',      radius: 55, color: '#52b4e8', score: 28,  emoji: '🍐', img: 'https://i.imgur.com/MXEakAS.png' },
   { name: '골드쉽',      radius: 62, color: '#d48fb0', score: 36,  emoji: '🍑', img: 'https://i.imgur.com/40zKla7.png' },
-  { name: '메이쇼도토', radius: 70, color: '#d4a800', score: 45,  emoji: '🍍', img: 'https://i.imgur.com/9VRY1cI.png' },
+  { name: '메이쇼도토',  radius: 70, color: '#d4a800', score: 45,  emoji: '🍍', img: 'https://i.imgur.com/9VRY1cI.png' },
   { name: '라모누',      radius: 78, color: '#52c41a', score: 55,  emoji: '🍈', img: 'https://i.imgur.com/PSFNPxD.png' },
   { name: '슈퍼크릭',    radius: 90, color: '#2ecc71', score: 100, emoji: '🍉', img: 'https://i.imgur.com/oBI9chn.png' },
 ];
+
+const FRUITS_UYUTONG = [
+  { name: '스즈카',       radius: 14, color: '#c0392b', score: 1,   emoji: '🌸', img: 'https://i.imgur.com/rNB2An3.png' },
+  { name: '맥퀸',         radius: 20, color: '#8e44ad', score: 3,   emoji: '👑', img: 'https://i.imgur.com/1aaVUTr.png' },
+  { name: '테이오',       radius: 27, color: '#2980b9', score: 6,   emoji: '⚡', img: 'https://i.imgur.com/OoT2G8m.png' },
+  { name: '스페셜위크',   radius: 34, color: '#e67e22', score: 10,  emoji: '⭐', img: 'https://i.imgur.com/IIbspKq.png' },
+  { name: '박신오',       radius: 40, color: '#27ae60', score: 15,  emoji: '🌿', img: 'https://i.imgur.com/Ri7sKQs.png' },
+  { name: '후쿠키타루',   radius: 48, color: '#f39c12', score: 21,  emoji: '🍀', img: 'https://i.imgur.com/JcfflUI.png' },
+  { name: '심볼리루돌프', radius: 55, color: '#1abc9c', score: 28,  emoji: '🦌', img: 'https://i.imgur.com/DGLbfyB.png' },
+  { name: '에어그루브',   radius: 62, color: '#e74c3c', score: 36,  emoji: '💨', img: 'https://i.imgur.com/wnGv0x5.png' },
+  { name: '시킹더펄',     radius: 70, color: '#9b59b6', score: 45,  emoji: '🔮', img: 'https://i.imgur.com/902FHgR.png' },
+  { name: '마루젠스키',   radius: 78, color: '#3498db', score: 55,  emoji: '💙', img: 'https://i.imgur.com/IPAdTfK.png' },
+  { name: '슈퍼크릭',     radius: 90, color: '#2ecc71', score: 100, emoji: '🏆', img: 'https://i.imgur.com/2KomHBX.png' },
+];
+
+let currentMode = 'bangdi'; // 'bangdi' | 'uyutong'
+let FRUITS = FRUITS_BANGDI;
 
 // ── 캔버스 크기 반응형 ──────────────────────────────────────────
 const BASE_W = 400, BASE_H = 550;
@@ -408,11 +434,17 @@ function calcScale() {
 
 // ── 이미지 프리로드 ────────────────────────────────────────────
 const imgCache = new Map();
-FRUITS.forEach((f, i) => {
-  const img = new Image();
-  img.src = f.img;
-  imgCache.set(i, img);
-});
+function reloadImgCache() {
+  imgCache.clear();
+  FRUITS.forEach((f, i) => {
+    if (f.img) {
+      const img = new Image();
+      img.src = f.img;
+      imgCache.set(i, img);
+    }
+  });
+}
+reloadImgCache();
 
 const { Engine, Runner, Bodies, Body, World, Events, Composite } = Matter;
 
@@ -433,20 +465,22 @@ const bestDisplay = document.getElementById('best-display');
 bestDisplay.textContent = bestScore;
 
 // ── 가이드 ────────────────────────────────────────────────────
-(function buildGuide() {
+function buildGuide() {
   const guide = document.getElementById('fruit-guide');
+  guide.innerHTML = '';
   FRUITS.forEach((f, i) => {
     const size = Math.max(8, Math.min(16, f.radius * 0.28));
     const row = document.createElement('div');
     row.className = 'fruit-row';
     row.innerHTML = `
       <div class="fruit-dot" style="width:${size}px;height:${size}px;background:${f.color};border:1.5px solid rgba(255,255,255,0.2)">
-        <img src="${f.img}" onerror="this.style.display='none'">
+        ${f.img ? `<img src="${f.img}" onerror="this.style.display='none'">` : ''}
       </div>
       <span class="fruit-name">${f.name}</span>`;
     guide.appendChild(row);
   });
-})();
+}
+buildGuide();
 
 // ── 물리 엔진 ─────────────────────────────────────────────────
 function initPhysics() {
@@ -500,8 +534,8 @@ function addFruitBody(idx, x, y, isMerge = false) {
 // ── 사운드 ────────────────────────────────────────────────────
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
-// 드롭 효과음 (캐릭터별, 없으면 null)
-const dropSounds = [
+// ── 빵디 모드 사운드 ────────────────────────────────────────
+const dropSounds_bangdi = [
   new Audio('01.mp3'), // 마야노탑건
   new Audio('02.mp3'), // 카렌짱
   new Audio('03.mp3'), // 무테키
@@ -511,9 +545,7 @@ const dropSounds = [
   new Audio('07.mp3'), // 부르봉
   null, null, null, null
 ];
-
-// 결합 효과음 (02~11.mp3)
-const mergeSounds = [
+const mergeSounds_bangdi = [
   new Audio('02.mp3'),  // 마야노탑건+마야노탑건 → 카렌짱
   new Audio('03.mp3'),  // 카렌짱+카렌짱 → 무테키
   new Audio('04.mp3'),  // 무테키+무테키 → 그래스원더
@@ -526,20 +558,48 @@ const mergeSounds = [
   new Audio('11.mp3'),  // 라모누+라모누 → 슈퍼크릭
 ];
 
+// ── 우유통 모드 사운드 ──────────────────────────────────────
+const dropSounds_uyutong = [
+  new Audio('u01.mp3'), // 스즈카
+  new Audio('u02.mp3'), // 맥퀸
+  new Audio('u03.mp3'), // 테이오
+  new Audio('u04.mp3'), // 스페셜위크
+  new Audio('u05.mp3'), // 박신오
+  new Audio('u06.mp3'), // 후쿠키타루
+  new Audio('u07.mp3'), // 심볼리루돌프
+  null, null, null, null
+];
+const mergeSounds_uyutong = [
+  new Audio('u02.mp3'),  // 스즈카+스즈카 → 맥퀸
+  new Audio('u03.mp3'),  // 맥퀸+맥퀸 → 테이오
+  new Audio('u04.mp3'),  // 테이오+테이오 → 스페셜위크
+  new Audio('u05.mp3'),  // 스페셜위크+스페셜위크 → 박신오
+  new Audio('u06.mp3'),  // 박신오+박신오 → 후쿠키타루
+  new Audio('u07.mp3'),  // 후쿠키타루+후쿠키타루 → 심볼리루돌프
+  new Audio('u08.mp3'),  // 심볼리루돌프+심볼리루돌프 → 에어그루브
+  new Audio('u09.mp3'),  // 에어그루브+에어그루브 → 시킹더펄
+  new Audio('u10.mp3'),  // 시킹더펄+시킹더펄 → 마루젠스키
+  new Audio('u11.mp3'),  // 마루젠스키+마루젠스키 → 슈퍼크릭
+];
+
+// ── 현재 모드 사운드 참조 (startGame에서 교체) ────────────
+let dropSounds = dropSounds_bangdi;
+let mergeSounds = mergeSounds_bangdi;
+
 function playDropSound(idx) {
   if (isMuted) return;
   const s = dropSounds[idx];
   if (!s) return;
-  s.currentTime = 0;
-  s.play().catch(() => {});
+  const clone = s.cloneNode();
+  clone.play().catch(() => {});
 }
 
 function playMergeSound(tier) {
   if (isMuted) return;
   const s = mergeSounds[tier - 1];
   if (!s) return;
-  s.currentTime = 0;
-  s.play().catch(() => {});
+  const clone = s.cloneNode();
+  clone.play().catch(() => {});
 }
 
 // ── 점수 ──────────────────────────────────────────────────────
@@ -729,12 +789,20 @@ function toggleMute() {
 
 // ── RESET ─────────────────────────────────────────────────────
 function confirmReset() {
-  if (!gameRunning) { startGame(); return; }
-  if (confirm('게임을 리셋할까요?')) startGame();
+  if (!gameRunning) { startGame(currentMode); return; }
+  if (confirm('게임을 리셋할까요?')) startGame(currentMode);
 }
 
 // ── 시작 ──────────────────────────────────────────────────────
-function startGame() {
+function startGame(mode) {
+  if (mode) {
+    currentMode = mode;
+    FRUITS = mode === 'uyutong' ? FRUITS_UYUTONG : FRUITS_BANGDI;
+    dropSounds = mode === 'uyutong' ? dropSounds_uyutong : dropSounds_bangdi;
+    mergeSounds = mode === 'uyutong' ? mergeSounds_uyutong : mergeSounds_bangdi;
+    reloadImgCache();
+    buildGuide();
+  }
   document.getElementById('title-overlay').classList.add('hidden');
   document.getElementById('gameover-overlay').classList.add('hidden');
   document.getElementById('ranking-overlay').classList.add('hidden');
