@@ -333,15 +333,15 @@ window._serverTimestamp = serverTimestamp;
 
 <script>
 const FRUITS = [
-  { name: '마야노 탑건',  radius: 14, color: '#e05a7a', score: 1,   emoji: '🍒', img: 'https://i.imgur.com/ZZ8zpLV.png' },
+  { name: '마야노탑건',  radius: 14, color: '#e05a7a', score: 1,   emoji: '🍒', img: 'https://i.imgur.com/ZZ8zpLV.png' },
   { name: '카렌짱',      radius: 20, color: '#e94560', score: 3,   emoji: '🍓', img: 'https://i.imgur.com/QjWxWJF.png' },
   { name: '무테키',   radius: 27, color: '#9b5de5', score: 6,   emoji: '🍇', img: 'https://i.imgur.com/ydPELKy.png' },
-  { name: '그래스 원더', radius: 34, color: '#f77f00', score: 10,  emoji: '🍊', img: 'https://i.imgur.com/84XTc4N.png' },
+  { name: '그래스원더', radius: 34, color: '#f77f00', score: 10,  emoji: '🍊', img: 'https://i.imgur.com/84XTc4N.png' },
   { name: '비블로스',      radius: 40, color: '#c8a800', score: 15,  emoji: '🍋', img: 'https://i.imgur.com/Vbpr8gf.png' },
   { name: '젠틸돈나',    radius: 48, color: '#e74c3c', score: 21,  emoji: '🍎', img: 'https://i.imgur.com/VNMhcK7.png' },
   { name: '부르봉',      radius: 55, color: '#52b4e8', score: 28,  emoji: '🍐', img: 'https://i.imgur.com/MXEakAS.png' },
   { name: '골드쉽',      radius: 62, color: '#d48fb0', score: 36,  emoji: '🍑', img: 'https://i.imgur.com/40zKla7.png' },
-  { name: '메이쇼 도토', radius: 70, color: '#d4a800', score: 45,  emoji: '🍍', img: 'https://i.imgur.com/9VRY1cI.png' },
+  { name: '메이쇼도토', radius: 70, color: '#d4a800', score: 45,  emoji: '🍍', img: 'https://i.imgur.com/9VRY1cI.png' },
   { name: '라모누',      radius: 78, color: '#52c41a', score: 55,  emoji: '🍈', img: 'https://i.imgur.com/PSFNPxD.png' },
   { name: '슈퍼크릭',    radius: 90, color: '#2ecc71', score: 100, emoji: '🍉', img: 'https://i.imgur.com/oBI9chn.png' },
 ];
@@ -471,13 +471,19 @@ const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
 // 드롭 효과음 (캐릭터별, 없으면 null)
 const dropSounds = [
-  new Audio('01.mp3'), // 마야노 탑건
-  null, null, null, null, null, null, null, null, null, null
+  new Audio('01.mp3'), // 마야노탑건
+  new Audio('02.mp3'), // 카렌짱
+  new Audio('03.mp3'), // 무테키
+  new Audio('04.mp3'), // 그래스원더
+  new Audio('05.mp3'), // 비블로스
+  new Audio('06.mp3'), // 젠틸돈나
+  new Audio('07.mp3'), // 부르봉
+  null, null, null, null
 ];
 
 // 결합 효과음 (02~11.mp3)
 const mergeSounds = [
-  new Audio('02.mp3'),  // 탑건+탑건 → 카렌짱
+  new Audio('02.mp3'),  // 마야노탑건+마야노탑건 → 카렌짱
   new Audio('03.mp3'),  // 카렌짱+카렌짱 → 무테키
   new Audio('04.mp3'),  // 무테키+무테키 → 그래스원더
   new Audio('05.mp3'),  // 그래스원더+그래스원더 → 비블로스
