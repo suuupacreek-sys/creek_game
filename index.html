@@ -264,7 +264,7 @@
     <button id="ranking-btn" onclick="showRanking()">🏆 RANK</button>
 
     <div id="title-overlay" class="overlay">
-        <div style="font-size:48px">🏇</div>
+        <div style="font-size:48px"><img src=https://i.imgur.com/oBI9chn.png width=200 height=200></div>
         <h1>크릭 게임</h1>
         <div style="color:rgba(255,255,255,0.5);font-size:12px;text-align:center;line-height:1.9">
           같은 우마를 합치면 더 강한 우마가!<br>위로 넘치면 게임 오버
@@ -274,7 +274,7 @@
       </div>
 
       <div id="gameover-overlay" class="overlay hidden">
-        <div style="font-size:44px">🏇</div>
+        <div style="font-size:44px"><img src=https://i.imgur.com/oBI9chn.png width=200 height=200></div>
         <h1>게임 오버!</h1>
         <div style="color:var(--yellow);font-size:24px;font-weight:900" id="final-score-text"></div>
         <div id="new-record-text" class="hidden" style="color:var(--pink);font-size:15px;font-weight:700">🏆 최고 기록 갱신!</div>
@@ -321,14 +321,45 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 getAnalytics(app);
 
-window._db = db;
-window._collection = collection;
-window._addDoc = addDoc;
-window._getDocs = getDocs;
-window._query = query;
-window._orderBy = orderBy;
-window._limit = limit;
-window._serverTimestamp = serverTimestamp;
+// 점수 등록 이벤트 수신
+window.addEventListener('submitScore', async (e) => {
+  const { name, score } = e.detail;
+  try {
+    await addDoc(collection(db, 'rankings'), {
+      name, score, createdAt: serverTimestamp()
+    });
+    document.getElementById('name-input-area').classList.add('hidden');
+    document.getElementById('submit-done').classList.remove('hidden');
+  } catch(err) {
+    alert('등록 실패 😢 다시 시도해주세요');
+  }
+});
+
+// 랭킹 조회 이벤트 수신
+window.addEventListener('fetchRanking', async () => {
+  const list = document.getElementById('ranking-list');
+  try {
+    const q = query(collection(db, 'rankings'), orderBy('score', 'desc'), limit(20));
+    const snap = await getDocs(q);
+    const medals = ['🥇','🥈','🥉'];
+    if (snap.empty) { list.innerHTML = '<div class="rank-loading">아직 기록이 없어요!</div>'; return; }
+    list.innerHTML = '';
+    let i = 0;
+    snap.forEach(doc => {
+      const d = doc.data();
+      const row = document.createElement('div');
+      row.className = 'rank-row';
+      row.innerHTML = `
+        <span class="${i < 3 ? 'rank-medal' : 'rank-num'}">${i < 3 ? medals[i] : (i+1)}</span>
+        <span class="rank-name">${d.name}</span>
+        <span class="rank-score">${d.score.toLocaleString()}</span>`;
+      list.appendChild(row);
+      i++;
+    });
+  } catch(err) {
+    list.innerHTML = '<div class="rank-loading">불러오기 실패 😢</div>';
+  }
+});
 </script>
 
 <script>
@@ -651,20 +682,10 @@ function triggerGameOver() {
   document.getElementById('gameover-overlay').classList.remove('hidden');
 }
 
-async function submitScore() {
+function submitScore() {
   const name = document.getElementById('player-name').value.trim();
   if (!name) { alert('닉네임을 입력해주세요!'); return; }
-  try {
-    await window._addDoc(window._collection(window._db, 'rankings'), {
-      name,
-      score,
-      createdAt: window._serverTimestamp()
-    });
-    document.getElementById('name-input-area').classList.add('hidden');
-    document.getElementById('submit-done').classList.remove('hidden');
-  } catch(e) {
-    alert('등록 실패 😢 다시 시도해주세요');
-  }
+  window.dispatchEvent(new CustomEvent('submitScore', { detail: { name, score } }));
 }
 
 async function showRanking() {
@@ -675,27 +696,7 @@ async function showRanking() {
   const list = document.getElementById('ranking-list');
   list.innerHTML = '<div class="rank-loading">불러오는 중...</div>';
 
-  try {
-    const q = window._query(window._collection(window._db, 'rankings'), window._orderBy('score', 'desc'), window._limit(20));
-    const snap = await window._getDocs(q);
-    const medals = ['🥇','🥈','🥉'];
-    if (snap.empty) { list.innerHTML = '<div class="rank-loading">아직 기록이 없어요!</div>'; return; }
-    list.innerHTML = '';
-    let i = 0;
-    snap.forEach(doc => {
-      const d = doc.data();
-      const row = document.createElement('div');
-      row.className = 'rank-row';
-      row.innerHTML = `
-        <span class="${i < 3 ? 'rank-medal' : 'rank-num'}">${i < 3 ? medals[i] : (i+1)}</span>
-        <span class="rank-name">${d.name}</span>
-        <span class="rank-score">${d.score.toLocaleString()}</span>`;
-      list.appendChild(row);
-      i++;
-    });
-  } catch(e) {
-    list.innerHTML = '<div class="rank-loading">불러오기 실패 😢</div>';
-  }
+  window.dispatchEvent(new Event('fetchRanking'));
 }
 
 function hideRanking() {
